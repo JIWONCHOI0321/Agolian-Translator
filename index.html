@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Agolian Translator</title>
+</head>
+<body>
+  <h2>애골어 번역기</h2>
+
+  <textarea id="input" rows="5" cols="50" placeholder="문장을 입력아세요"></textarea>
+  <br><br>
+  <button onclick="run()">변완</button>
+
+  <h3>결과</h3>
+  <pre id="output"></pre>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  <script>
+    let pyodideReady = loadPyodide();
+
+    async function run() {
+      const pyodide = await pyodideReady;
+      const text = document.getElementById("input").value;
+
+      pyodide.globals.set("text", text);
+
+      const code = `
+mapping = {
+    14: 12,  # ㅊ -> ㅈ
+    13: 12,  # ㅉ -> ㅈ
+    15: 0,   # ㅋ -> ㄱ
+    1: 0,    # ㄲ -> ㄱ
+    16: 3,   # ㅌ -> ㄷ
+    4: 3,    # ㄸ -> ㄷ
+    17: 7,   # ㅍ -> ㅂ
+    8: 7,    # ㅃ -> ㅂ
+    18: 11,  # ㅎ -> ㅇ
+    10: 9    # ㅆ -> ㅅ
+}
+
+result = []
+
+for ch in text:
+    code = ord(ch)
+
+    if 0xAC00 <= code <= 0xD7A3:
+        s = code - 0xAC00
+        l = s // 588
+        v = (s % 588) // 28
+        t = s % 28
+
+        l = mapping.get(l, l)
+
+        new_char = chr(0xAC00 + l * 588 + v * 28 + t)
+        result.append(new_char)
+    else:
+        result.append(ch)
+
+"".join(result)
+      `;
+
+      const output = pyodide.runPython(code);
+      document.getElementById("output").textContent = output;
+    }
+  </script>
+</body>
+</html>
