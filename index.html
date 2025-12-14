@@ -44,7 +44,11 @@
   <button onclick="run()">변완</button>
   <label>
   <input type="checkbox" id="softH">
-  여린히읗(ㆆ) 표기 적용
+  여린히읗(ㆆ) 표기 원칙 적용
+</label>
+  <label>
+  <input type="checkbox" id="yeAlt">
+  예외규정-1 적용
 </label>
 <br><br>
 
@@ -124,26 +128,31 @@
 
   <!-- Pyodide -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
-  <script>
-    let pyodideReady = loadPyodide();
+ <script>
+let pyodideReady = loadPyodide();
 
-    async function run() {
-      const pyodide = await pyodideReady;
-      const text = document.getElementById("input").value;
+async function run() {
+  const pyodide = await pyodideReady;
 
-      pyodide.globals.set("text", text);
-      const useSoftH = document.getElementById("softH").checked;
-pyodide.globals.set("useSoftH", useSoftH);
+  // 입력값 가져오기
+  const text = document.getElementById("input").value;
 
-      const code = `
-      # 중성 자모
+  // 체크박스 값 가져오기
+  const useSoftH = document.getElementById("softH").checked;
+  const useYeAlt = document.getElementById("yeAlt").checked;
+
+  // JS에서 Python 전역 변수로 설정
+  pyodide.globals.set("text", text);
+  pyodide.globals.set("useSoftH", useSoftH);
+  pyodide.globals.set("useYeAlt", useYeAlt);
+
+  const code = `
 JUNG = [
     "ᅡ","ᅢ","ᅣ","ᅤ","ᅥ","ᅦ","ᅧ","ᅨ",
     "ᅩ","ᅪ","ᅫ","ᅬ","ᅭ","ᅮ","ᅯ","ᅰ",
     "ᅱ","ᅲ","ᅳ","ᅴ","ᅵ"
 ]
 
-# 종성 자모
 JONG = [
     "", "ᆨ","ᆩ","ᆪ","ᆫ","ᆬ","ᆭ","ᆮ","ᆯ","ᆰ",
     "ᆱ","ᆲ","ᆳ","ᆴ","ᆵ","ᆶ","ᆷ","ᆸ","ᆹ",
@@ -153,16 +162,9 @@ JONG = [
 SOFT_H_JAMO = "ᅙ"  # 여린히읗
 
 mapping = {
-    14: 12,  # ㅊ → ㅈ
-    13: 12,  # ㅉ → ㅈ
-    15: 0,   # ㅋ → ㄱ
-    1: 0,    # ㄲ → ㄱ
-    16: 3,   # ㅌ → ㄷ
-    4: 3,    # ㄸ → ㄷ
-    17: 7,   # ㅍ → ㅂ
-    8: 7,    # ㅃ → ㅂ
-    18: 11,  # ㅎ → ㅇ (기본)
-    10: 9    # ㅆ → ㅅ
+    14: 12, 13: 12, 15: 0, 1: 0,
+    16: 3, 4: 3, 17: 7, 8: 7,
+    18: 11, 10: 9
 }
 
 SOFT_H = 19  # ㆆ 초성 인덱스
@@ -178,26 +180,30 @@ for ch in text:
         v = (s % 588) // 28
         t = s % 28
 
+        # 초성 변환
         l = mapping.get(orig_l, orig_l)
 
+        # 여린히읗 적용
         if useSoftH and orig_l == 18:
             syllable = SOFT_H_JAMO + JUNG[v] + JONG[t]
             result.append(syllable)
             continue
 
+        # ㅖ 예외 규정 적용
+        if useYeAlt and v == 7 and orig_l != 11:  # ㅖ → ㅐ
+            v = 1
+
         new_char = chr(0xAC00 + l * 588 + v * 28 + t)
         result.append(new_char)
-
     else:
         result.append(ch)
 
 "".join(result)
-      `;
+  `;
 
-      const output = pyodide.runPython(code);
-      document.getElementById("output").textContent = output;
-    }
-  </script>
-
+  const output = pyodide.runPython(code);
+  document.getElementById("output").textContent = output;
+}
+</script>
 </body>
 </html>
