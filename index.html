@@ -2,12 +2,29 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>애골어 번역기(Agolian Translator)</title>
 
+  <!-- 🔹 검색 결과에 보이는 제목 -->
+  <title>애골어 번역기 (Agolian Translator)</title>
+
+  <!-- 🔹 검색 결과 설명 -->
   <meta name="description"
-        content="안국어에 10조성법을 적용아여 모든 조성 음운을 감왹제로 교제안 인공 방언인 애골어로 단어를 번역애 주는 웹사이드로, 애골어 장작 및 전바는 어문 이론, 가설 증명 담구에 대안 사외실엄으로 이용됩니다. ">
-
+        content="한국어에 10초성법을 적용하여 모든 초성 음운을 감획체로 교체한 인공 방언인 애골어로 단어를 번역해 주는 웹사이트로, 애골어 창작 및 전파는 어문 이론, 가설 증명 탐구에 대한 사회실험으로 이용됩니다.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
+<body>
+
+  <!-- 🔹 검색을 위한 대표 제목 (h1은 딱 1개) -->
+  <h1>애골어 번역기 (Agolian Translator)</h1>
+
+  <!-- 🔹 검색용 설명 문단 -->
+  <p>
+한국어에 10초성법을 적용하여 모든 초성 음운을 감획체로 교체한 인공 방언인 애골어로 단어를 번역해 주는 웹사이트로, 애골어 창작 및 전파는 어문 이론, 가설 증명 탐구에 대한 사회실험으로 이용됩니다.
+  </p>
+
+  <hr>
+
+  <!-- 🔹 번역기 UI -->
   <textarea id="input" rows="5" cols="50" placeholder="문장을 입력아세요"></textarea>
   <br><br>
   <button onclick="run()">변완</button>
@@ -15,6 +32,7 @@
   <h3>결과</h3>
   <pre id="output"></pre>
 
+  <!-- 🔹 Pyodide -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   <script>
     let pyodideReady = loadPyodide();
@@ -64,5 +82,6 @@ for ch in text:
       document.getElementById("output").textContent = output;
     }
   </script>
+
 </body>
 </html>
