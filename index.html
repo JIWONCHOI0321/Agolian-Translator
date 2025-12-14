@@ -3,19 +3,29 @@
 <head>
   <meta charset="UTF-8">
 
-  <!-- 🔹 검색 결과에 보이는 제목 -->
+  <!-- 검색 결과에 보이는 제목 -->
   <title>애골어 번역기 (Agolian Translator)</title>
 
-  <!-- 🔹 검색 결과 설명 -->
+  <!-- 검색 결과 설명 -->
   <meta name="description"
         content="애골어는 이아영 학생을 중심으로 만들어진 한국어 기반 반인공 방언 체계입니다. 본 사이트는 애골어의 10초성법 규칙에 따라 한국어를 변환하는 번역기입니다.">
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap" rel="stylesheet">
+
+<style>
+  body, textarea, pre, button {
+    font-family: "Noto Serif KR", "Apple SD Gothic Neo",
+                 "Malgun Gothic", serif;
+  }
+</style>
+
 </head>
 
 <body>
 
-  <!-- 🔹 대표 제목 -->
+  <!-- 대표 제목 -->
   <h1>애골어 번역기 (Agolian Translator)</h1>
 
   <p>
@@ -26,19 +36,24 @@
 
   <hr>
 
-  <!-- 🔹 번역기 -->
+  <!-- 번역기 -->
   <h2>번역기</h2>
 
   <textarea id="input" rows="5" cols="50" placeholder="문장을 입력아세요"></textarea>
   <br><br>
   <button onclick="run()">변완</button>
+  <label>
+  <input type="checkbox" id="softH">
+  여린히읗(ㆆ) 표기 적용
+</label>
+<br><br>
 
   <h3>결과</h3>
   <pre id="output"></pre>
 
   <hr>
 
-  <!-- 🔹 애골어 규정 설명 (개정안) -->
+  <!-- 애골어 규정 설명 (개정안) -->
   <h2>애골어 개정 규정</h2>
 
   <p>
@@ -102,12 +117,12 @@
 
   <hr>
 
-<!-- 🔹 제작자 표기 -->
+<!-- 제작자 표기 -->
   <footer>
     <p>규정 정립 및 구현 : 최지원</p>
   </footer>
 
-  <!-- 🔹 Pyodide -->
+  <!-- Pyodide -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   <script>
     let pyodideReady = loadPyodide();
@@ -117,20 +132,40 @@
       const text = document.getElementById("input").value;
 
       pyodide.globals.set("text", text);
+      const useSoftH = document.getElementById("softH").checked;
+pyodide.globals.set("useSoftH", useSoftH);
 
       const code = `
+      # 중성 자모
+JUNG = [
+    "ᅡ","ᅢ","ᅣ","ᅤ","ᅥ","ᅦ","ᅧ","ᅨ",
+    "ᅩ","ᅪ","ᅫ","ᅬ","ᅭ","ᅮ","ᅯ","ᅰ",
+    "ᅱ","ᅲ","ᅳ","ᅴ","ᅵ"
+]
+
+# 종성 자모
+JONG = [
+    "", "ᆨ","ᆩ","ᆪ","ᆫ","ᆬ","ᆭ","ᆮ","ᆯ","ᆰ",
+    "ᆱ","ᆲ","ᆳ","ᆴ","ᆵ","ᆶ","ᆷ","ᆸ","ᆹ",
+    "ᆺ","ᆻ","ᆼ","ᆽ","ᆾ","ᆿ","ᇀ","ᇁ","ᇂ"
+]
+
+SOFT_H_JAMO = "ᅙ"  # 여린히읗
+
 mapping = {
-    14: 12,  # ㅊ -> ㅈ
-    13: 12,  # ㅉ -> ㅈ
-    15: 0,   # ㅋ -> ㄱ
-    1: 0,    # ㄲ -> ㄱ
-    16: 3,   # ㅌ -> ㄷ
-    4: 3,    # ㄸ -> ㄷ
-    17: 7,   # ㅍ -> ㅂ
-    8: 7,    # ㅃ -> ㅂ
-    18: 11,  # ㅎ -> ㅇ
-    10: 9    # ㅆ -> ㅅ
+    14: 12,  # ㅊ → ㅈ
+    13: 12,  # ㅉ → ㅈ
+    15: 0,   # ㅋ → ㄱ
+    1: 0,    # ㄲ → ㄱ
+    16: 3,   # ㅌ → ㄷ
+    4: 3,    # ㄸ → ㄷ
+    17: 7,   # ㅍ → ㅂ
+    8: 7,    # ㅃ → ㅂ
+    18: 11,  # ㅎ → ㅇ (기본)
+    10: 9    # ㅆ → ㅅ
 }
+
+SOFT_H = 19  # ㆆ 초성 인덱스
 
 result = []
 
@@ -139,14 +174,20 @@ for ch in text:
 
     if 0xAC00 <= code <= 0xD7A3:
         s = code - 0xAC00
-        l = s // 588
+        orig_l = s // 588
         v = (s % 588) // 28
         t = s % 28
 
-        l = mapping.get(l, l)
+        l = mapping.get(orig_l, orig_l)
+
+        if useSoftH and orig_l == 18:
+            syllable = SOFT_H_JAMO + JUNG[v] + JONG[t]
+            result.append(syllable)
+            continue
 
         new_char = chr(0xAC00 + l * 588 + v * 28 + t)
         result.append(new_char)
+
     else:
         result.append(ch)
 
