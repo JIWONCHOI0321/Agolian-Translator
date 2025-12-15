@@ -53,7 +53,23 @@
 <br><br>
 
   <h3>결과</h3>
-  <pre id="output"질"";
+  <script>
+let pyodideReady = loadPyodide();
+
+async function run() {
+  const pyodide = await pyodideReady;
+
+  // 입력값 가져오기
+  let text = document.getElementById("input").value;
+
+  // 체크박스 값 가져오기
+  const useSoftH = document.getElementById("softH").checked;
+  const useYeAlt = document.getElementById("yeAlt").checked;
+
+  // 족 치환 관련: 조사 붙은 경우만 치환
+  const josa = ["은","는","이","가","을","를","의","도","와","과","야","여","아"];
+  const foot_words = ["발가락","발끝","발바닥","발등","발꿈치","발목","발톱",
+                      "발바닥살","발목뼈","발등뼈","발뒤꿈치살","발자국","발걸음","발놀림","발"];
   foot_words.sort((a,b) => b.length - a.length); // 긴 단어 먼저
 
   foot_words.forEach(word => {
@@ -66,7 +82,7 @@
   pyodide.globals.set("useSoftH", useSoftH);
   pyodide.globals.set("useYeAlt", useYeAlt);
 
-  // 애골어 변환 로직 (원본 유지)
+  //
   const code = `
 JUNG = [
     "ᅡ","ᅢ","ᅣ","ᅤ","ᅥ","ᅦ","ᅧ","ᅨ",
