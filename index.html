@@ -29,22 +29,26 @@
   <h1>애골어 번역기 (Agolian Translator)</h1>
 
   <p>
-    이 웹사이트는 한국어 음운 체계를 변형한 반인공 방언 <strong>애골어</strong>의
-    규칙을 설명하고, 해당 규칙에질"";
-foot_words.sort((a,b) => b.length - a.length);
+    이 웹사이트는 한국어 음운 체계를 변형한 반인공 방질"";
+  foot_words.sort((a,b) => b.length - a.length);
 
-// 단어 전체 + 조사만
-foot_words.forEach(word => {
-    const regex = new RegExp(`\\b${word}(${josaPattern})\\b`, "g");
-    text = text.replace(regex, word.replace("발","족") + "$1");
-});
+  // 조사 붙은 경우만 치환
+  foot_words.forEach(word => {
+    let index = 0;
+    while ((index = text.indexOf(word, index)) !== -1) {
+      let nextChar = text[index + word.length];
+      if (josa.includes(nextChar)) {
+        text = text.slice(0, index) + word.replace("발","족") + text.slice(index + word.length);
+      }
+      index += word.length;
+    }
+  });
 
-  // Pyodide로 전달
+  // 이제 text를 Pyodide로 넘겨서 애골어 변환만 수행
   pyodide.globals.set("text", text);
-  pyodide.globals.set("useSoftH", useSoftH);
-  pyodide.globals.set("useYeAlt", useYeAlt);
-
+    
   const code = `
+    
 JUNG = [
     "ᅡ","ᅢ","ᅣ","ᅤ","ᅥ","ᅦ","ᅧ","ᅨ",
     "ᅩ","ᅪ","ᅫ","ᅬ","ᅭ","ᅮ","ᅯ","ᅰ",
@@ -65,27 +69,33 @@ mapping = {
     18: 11, 10: 9
 }
 
+SOFT_H = 19  # ㆆ 초성 인덱스
+
 result = []
 
 for ch in text:
     code = ord(ch)
+
     if 0xAC00 <= code <= 0xD7A3:
         s = code - 0xAC00
         orig_l = s // 588
         v = (s % 588) // 28
         t = s % 28
 
+        # 초성 변환
         l = mapping.get(orig_l, orig_l)
 
+        # 여린히읗 적용
         if useSoftH and orig_l == 18:
             syllable = SOFT_H_JAMO + JUNG[v] + JONG[t]
             result.append(syllable)
             continue
 
-        if useYeAlt and v == 7 and orig_l != 11:
+        # ㅖ 예외 규정 적용
+        if useYeAlt and v == 7 and orig_l != 11:  # ㅖ → ㅐ
             v = 1
 
-        new_char = chr(0xAC00 + l*588 + v*28 + t)
+        new_char = chr(0xAC00 + l * 588 + v * 28 + t)
         result.append(new_char)
     else:
         result.append(ch)
@@ -97,5 +107,8 @@ for ch in text:
   document.getElementById("output").textContent = output;
 }
 </script>
+</body>
+</html>
+
 </body>
 </html>
