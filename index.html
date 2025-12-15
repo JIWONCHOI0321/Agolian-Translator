@@ -92,7 +92,7 @@
 
   <p>
     예시:<br>
-    펜 / 책 / 프린트 → 벤 / 잭 / 브린드<br>
+    펜 책 프린트 → 벤 잭 브린드<br>
     안녕하세요 → 안녕ᅙᅡ세요 (표기 원칙) / 안녕아세요 (표기 허용)
   </p>
 
@@ -146,11 +146,13 @@ async function run() {
   const foot_words = ["발가락","발끝","발바닥","발등","발꿈치","발목","발톱",
                       "발바닥살","발목뼈","발등뼈","발뒤꿈치살","발자국","발걸음","발놀림","발","발길질", "발찌"];
   foot_words.sort((a,b) => b.length - a.length); // 긴 단어 먼저
-
+  
   foot_words.forEach(word => {
-    const re = new RegExp(`\\b${word}([${josa.join("")}])`, "g");
-    text = text.replace(re, word.replace("발","족") + "$1");
+  josa.forEach(j => {
+    const re = new RegExp(word + j, "g");
+    text = text.replace(re, word.replace("발","족") + j);
   });
+});
 
   // JS에서 Python 전역 변수로 설정
   pyodide.globals.set("text", text);
@@ -185,7 +187,6 @@ result = []
 
 for ch in text:
     code = ord(ch)
-
     if 0xAC00 <= code <= 0xD7A3:
         s = code - 0xAC00
         orig_l = s // 588
