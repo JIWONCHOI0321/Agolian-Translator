@@ -141,25 +141,20 @@ async function run() {
   const useSoftH = document.getElementById("softH").checked;
   const useYeAlt = document.getElementById("yeAlt").checked;
 
-  // 조사 리스트
-  const josa = ["은","는","이","가","을","를","의","도","와"];
+  // 조사
+const josa = ["은","는","이","가","을","를","의","도","와"];
+const josaPattern = josa.join("|");
 
-  // 신체 부위 단어 리스트 (긴 단어 우선)
-  const foot_words = ["발가락","발끝","발바닥","발등","발꿈치","발목","발톱",
-                      "발바닥살","발목뼈","발등뼈","발뒤꿈치살","발자국","발걸음","발놀림","발","발길질","발찌"];
-  foot_words.sort((a,b) => b.length - a.length);
+// 
+const foot_words = ["발가락","발끝","발바닥","발등","발꿈치","발목","발톱",
+                    "발바닥살","발목뼈","발등뼈","발뒤꿈치살","발자국","발걸음","발놀림","발"];
+foot_words.sort((a,b) => b.length - a.length);
 
-  // 조사 붙은 경우만 치환
-  foot_words.forEach(word => {
-    let index = 0;
-    while ((index = text.indexOf(word, index)) !== -1) {
-      let nextChar = text[index + word.length];
-      if (josa.includes(nextChar)) {
-        text = text.slice(0, index) + word.replace("발","족") + text.slice(index + word.length);
-      }
-      index += word.length;
-    }
-  });
+// 단어 전체 + 조사만
+foot_words.forEach(word => {
+    const regex = new RegExp(`\\b${word}(${josaPattern})\\b`, "g");
+    text = text.replace(regex, word.replace("발","족") + "$1");
+});
 
   // Pyodide로 전달
   pyodide.globals.set("text", text);
